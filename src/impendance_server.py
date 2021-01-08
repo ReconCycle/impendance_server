@@ -25,13 +25,15 @@ import numpy as np
 
 class ImpendanceServer(object):
 
-    stiff_robot_pos_stf=300
-    stiff_robot_or_stf=30
+    stiff_robot_pos_stf=100
+    stiff_robot_or_stf=10
 
-    soft_robot_pos_stf=20
-    soft_robot_or_stf=20
+    soft_robot_pos_stf=10
+    soft_robot_or_stf=1
 
     change_rate=20
+
+    damping=2
 
 
 
@@ -127,7 +129,7 @@ class ImpendanceServer(object):
         number_of_steps=10*abs(actual_pos_impedance-desired_pos_impedance)/change_rate #because we send each 0.1 s
 
         function_pos = np.linspace(actual_pos_impedance, desired_pos_impedance,number_of_steps)
-        function_or = np.linspace(actual_pos_impedance, desired_pos_impedance,number_of_steps)
+        function_or = np.linspace(actual_or_impedance, desired_or_impedance,number_of_steps)
 
 
         # reset robot neural position
@@ -137,8 +139,19 @@ class ImpendanceServer(object):
         # change impendance
         stiffness = ImpedanceParameters()
         for i in range(0,len(function_pos)):
-            
-            stiffness.k=[function_pos[i]]
+            stiffness.n=9
+
+            vector_k=np.zeros(2*stiffness.n)
+            vector_d=np.zeros(2*stiffness.n)
+            for j in [0,4,8]:
+                vector_k[j]=function_pos[i]
+                vector_k[j+stiffness.n]=function_or[i]
+                vector_d[j]=self.damping
+                vector_d[j+stiffness.n]=self.damping
+
+            stiffness.k=vector_k
+            stiffness.d=vector_d
+
             self.pub_stiff.publish(stiffness)
             rospy.sleep(0.1)
 
