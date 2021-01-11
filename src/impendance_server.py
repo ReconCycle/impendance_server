@@ -28,8 +28,8 @@ class ImpendanceServer(object):
     stiff_robot_pos_stf=100
     stiff_robot_or_stf=10
 
-    soft_robot_pos_stf=10
-    soft_robot_or_stf=1
+    soft_robot_pos_stf=0
+    soft_robot_or_stf= 0
 
     change_rate=20
 
@@ -37,11 +37,12 @@ class ImpendanceServer(object):
 
 
 
-    name_space='test'
+    name_space='/cartesian_impedance_controller/'
     def __init__(self):
 
-        print('test')
-
+      
+        self.last_pos_impedence = 100
+        self.last_or_impedence = 10
         # INIT NODE
 
         rospy.init_node('impendance_server')
@@ -69,11 +70,11 @@ class ImpendanceServer(object):
 
         # CREATE NODE PUBLISHERS  rospy.Publisher(name, type, queue_size=)
 
-        self.pub_stiff = rospy.Publisher('stiffness', ImpedanceParameters,queue_size=10)
-        self.pub_reset = rospy.Publisher('reset_target', Empty,queue_size=10)
+        self.pub_stiff = rospy.Publisher(self.name_space+'stiffness', ImpedanceParameters,queue_size=10)
+        self.pub_reset = rospy.Publisher(self.name_space+'reset_target', Empty,queue_size=10)
         # CREATE NODE SUBSCRIBERS
 
-        self.callback_make_robot_soft(1)
+
 
 
 
@@ -118,12 +119,12 @@ class ImpendanceServer(object):
 
         pass
 
-    def change_cart_impendance(self, desired_pos_impedance, desired_or_impendance, change_rate):
+    def change_cart_impendance(self, desired_pos_impedance, desired_or_impedance, change_rate):
 
 
         # read actual impendance
-        actual_pos_impedance=100
-        actual_or_impedance=100
+        actual_pos_impedance=self.last_pos_impedence
+        actual_or_impedance=self.last_or_impedence
 
         # calculate changing function
         number_of_steps=10*abs(actual_pos_impedance-desired_pos_impedance)/change_rate #because we send each 0.1 s
@@ -153,6 +154,11 @@ class ImpendanceServer(object):
             stiffness.d=vector_d
 
             self.pub_stiff.publish(stiffness)
+
+            #save last published impendance
+            self.last_pos_impedence=function_pos[i]
+            self.last_or_impedence=function_or[i]
+
             rospy.sleep(0.1)
 
         return 1

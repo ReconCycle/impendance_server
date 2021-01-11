@@ -10,7 +10,7 @@ project(impendance_server)
 find_package(catkin REQUIRED COMPONENTS
   robot_module_msgs
   std_msgs
-  std_srv
+  std_srvs
 )
 
 ## System dependencies are found with CMake's conventions
